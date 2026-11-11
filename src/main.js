@@ -2,6 +2,16 @@
 
 import { loadStore, recordGame, recordRound, resetStore, saveStore } from './storage/store.js';
 import { exportHtml, homeHtml, pausedHtml, quitHtml, resetHtml, settingsHtml } from './ui/home.js';
+import {
+  isFinished,
+  LESSONS,
+  lessonHtml,
+  lessonListHtml,
+  nextStep,
+  openLesson,
+  pickChoice,
+  prevStep,
+} from './ui/lessons.js';
 import { ONBOARDING_STEPS, onboardingHtml } from './ui/onboarding.js';
 import { gameResultHtml, roundResultHtml } from './ui/result.js';
 import { createSession, ME } from './ui/session.js';
@@ -28,8 +38,10 @@ const loaded = loadStore(storage);
 let store = loaded.store;
 let corrupted = loaded.corrupted;
 
-/** @type {'home' | 'table'} */
+/** @type {'home' | 'table' | 'lessons'} */
 let screen = 'home';
+/** @type {import('./ui/lessons.js').LessonState | null} レッスン中ならその状態。null なら一覧 */
+let lesson = null;
 /** @type {string | null} 開いているシート（'yaku' / 'settings' / 'quit' / 'term:riichi' など） */
 let sheet = null;
 let onboardingStep = 0;
@@ -70,7 +82,8 @@ function sheetHtml() {
   if (sheet === 'yaku') body = yakuListHtml();
   else if (sheet === 'settings') body = settingsHtml(store, screen === 'table');
   else if (sheet === 'export') body = exportHtml(store);
-  else if (sheet.startsWith('term:')) body = termSheetHtml(sheet.slice(5));
+  else if (sheet.startsWith('term:'))
+    body = termSheetHtml(sheet.slice(5), screen === 'table' && session.beginner);
   else {
     closable = false;
     if (sheet === 'quit') body = quitHtml();
@@ -87,9 +100,11 @@ function sheetHtml() {
 function render() {
   let html = '';
   if (screen === 'table' && session.state) {
-    const table = tableHtml(session);
+    const table = tableHtml(session, { tileNames: store.settings.tileNames });
     buttons = table.buttons;
     html = `<div class="table">${table.html}</div>${roundResultHtml(session)}${gameResultHtml(session)}`;
+  } else if (screen === 'lessons') {
+    html = lesson ? lessonHtml(lesson) : lessonListHtml(store.lessonsDone);
   } else {
     html = homeHtml(store, { corrupted, updateReady });
   }
@@ -116,7 +131,12 @@ function startGame() {
   screen = 'table';
   sheet = null;
   corrupted = false;
-  session.start({ seed, startDealer: seed % 4, rules: { redDora: store.settings.redDora } });
+  session.start({
+    seed,
+    startDealer: seed % 4,
+    rules: { redDora: store.settings.redDora },
+    ...(store.settings.beginner ? { beginner: true } : {}),
+  });
   if (!store.settings.onboardingDone) {
     onboardingStep = 0;
     openSheet('onboarding');
@@ -165,11 +185,56 @@ function onCommand(cmd, id) {
     case 'new-game':
       startGame();
       break;
+    case 'new-game-beginner':
+      // レッスンを終えた人は、そのまま初心者モードで始める
+      store = { ...store, settings: { ...store.settings, beginner: true } };
+      persist();
+      startGame();
+      break;
     case 'resume':
       resumeGame();
       break;
     case 'home':
       goHome();
+      break;
+    case 'lessons':
+    case 'lesson-list':
+      screen = 'lessons';
+      lesson = null;
+      render();
+      break;
+    case 'lesson-open': {
+      const n = Number(id);
+      if (Number.isInteger(n) && n >= 0 && n < LESSONS.length) {
+        lesson = openLesson(n);
+        render();
+      }
+      break;
+    }
+    case 'lesson-pick':
+      if (lesson) {
+        lesson = pickChoice(lesson, Number(id));
+        render();
+      }
+      break;
+    case 'lesson-next':
+      if (lesson) {
+        lesson = nextStep(lesson);
+        if (isFinished(lesson)) {
+          const done = LESSONS[lesson.lesson].id;
+          if (!store.lessonsDone.includes(done)) {
+            store = { ...store, lessonsDone: [...store.lessonsDone, done] };
+            persist();
+          }
+        }
+        render();
+      }
+      break;
+    case 'lesson-prev':
+      if (lesson) {
+        lesson = prevStep(lesson);
+        render();
+      }
       break;
     case 'hint':
       session.toggleHint();
@@ -203,7 +268,7 @@ function onCommand(cmd, id) {
       closeSheet();
       break;
     case 'toggle':
-      if (id === 'redDora' || id === 'sound') {
+      if (id === 'redDora' || id === 'sound' || id === 'beginner' || id === 'tileNames') {
         store = { ...store, settings: { ...store.settings, [id]: !store.settings[id] } };
         persist();
         render();

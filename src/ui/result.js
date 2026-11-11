@@ -101,6 +101,77 @@ function nextGoal(session) {
 }
 
 /**
+ * 初心者モードの「次回の課題」。
+ * @param {Session} session
+ */
+function plainGoal(session) {
+  const r = /** @type {GameState} */ (session.state).result;
+  if (!r) return '';
+  if (r.wins.some((w) => w.seat === ME)) return 'おめでとう！ 次も上がりを目指しましょう。';
+  if (r.wins.some((w) => w.from === ME))
+    return 'リーチした人が捨てた牌と同じ牌は、その人にはロンされません。だれかがリーチしたら試してみましょう。';
+  if (r.reason === 'exhaustive' && !r.tenpai[ME])
+    return 'ヒントのおすすめの牌を捨てて、テンパイ（あと1枚で上がり）を目指しましょう。';
+  if (r.reason === 'exhaustive') return 'あと少し！ テンパイしたら「リーチ」をしてみましょう。';
+  return 'ほかの人が上がりました。次の局でがんばりましょう。';
+}
+
+/**
+ * 初心者モードの、局の結果の一言まとめ。
+ * @param {Session} session
+ * @returns {string}
+ */
+function plainSummary(session) {
+  const state = /** @type {GameState} */ (session.state);
+  const r = /** @type {NonNullable<GameState['result']>} */ (state.result);
+  /** @param {number} n */
+  const pts = (n) => `${Math.abs(n)}点`;
+  const mine = r.deltas[ME];
+  const lines = [];
+  if (r.type === 'win') {
+    for (const w of r.wins) {
+      const yaku = w.hand.yaku.map((y) => y.name).join('・');
+      const how = w.from === null ? 'ツモ（自分で引いた牌）' : 'ロン（ほかの人の捨て牌）';
+      if (w.seat === ME)
+        lines.push(`<strong>あなたが ${yaku} で上がりました！</strong> ${how}で上がりです。`);
+      else if (w.from === ME)
+        lines.push(
+          `あなたが捨てた<span class="inline-tiles">${tilesHtml(state, [w.tile], 22)}</span>で、${session.names[w.seat]}が上がりました（${yaku}）。ロンのときは、捨てた人が1人で全部払います。`,
+        );
+      else if (w.from === null)
+        lines.push(
+          `${session.names[w.seat]}が ${yaku} で上がりました（${how}）。ツモのときは、ほかの3人全員が少しずつ払います。`,
+        );
+      else
+        lines.push(
+          `${session.names[w.seat]}が ${yaku} で上がりました（${session.names[w.from]}の捨て牌でロン）。払うのは捨てた人だけです。`,
+        );
+    }
+  } else if (r.reason === 'exhaustive') {
+    lines.push('牌がなくなり、だれも上がらずに終わりました（流局）。');
+    const all = r.tenpai.every(Boolean);
+    const none = !r.tenpai.some(Boolean);
+    lines.push(
+      all || none
+        ? `${all ? '全員がテンパイ（あと1枚で上がり）だった' : 'だれもテンパイ（あと1枚で上がり）していなかった'}ので、点数のやりとりはありません。`
+        : r.tenpai[ME]
+          ? 'あなたはテンパイ（あと1枚で上がり）だったので、していない人から点数をもらいます。'
+          : 'あなたはテンパイ（あと1枚で上がり）していなかったので、している人に点数を払います。',
+    );
+  } else {
+    const reason = /** @type {keyof typeof DRAW_LABEL} */ (r.reason ?? 'exhaustive');
+    lines.push(`${DRAW_LABEL[reason]}（特別なルールで、この局は終わりです）。`);
+  }
+  const change =
+    mine > 0
+      ? `<p class="points is-big plus">+${pts(mine)} もらいました</p>`
+      : mine < 0
+        ? `<p class="points is-big minus">${pts(mine)} 払いました</p>`
+        : '<p class="points">点数の変化はありません</p>';
+  return `<div class="plain-summary">${lines.map((l) => `<p>${l}</p>`).join('')}${change}<p class="small">いまの点数: ${r.scores[ME]}点</p></div>`;
+}
+
+/**
  * 局の結果（roundEnd のとき）。
  * @param {Session} session
  * @returns {string}
@@ -139,9 +210,15 @@ export function roundResultHtml(session) {
         ? `<p class="small">残った供託は${session.names[r.kyotakuTo]}が受け取りました。</p>`
         : '';
     const hints = session.ui.hintUses > 0 ? `ヒント使用 ${session.ui.hintUses}回。` : '';
-    footer =
-      `<table class="score-table"><caption class="small">点数の移動</caption>${rows}</table>${kyotaku}` +
-      `<p class="small goal">${hints}次回の課題: ${nextGoal(session)}</p>`;
+    footer = `<table class="score-table"><caption class="small">点数の移動</caption>${rows}</table>${kyotaku}`;
+    if (!session.beginner) footer += `<p class="small goal">${hints}次回の課題: ${nextGoal(session)}</p>`;
+  }
+  if (session.beginner) {
+    // 一言のまとめを先に出し、役・符・翻・点数の内訳は折りたたむ
+    body =
+      `${plainSummary(session)}<details class="result-details"><summary>詳しく見る（役・点数の内訳）</summary>${body}${footer}</details>` +
+      `<p class="small goal">次は: ${plainGoal(session)}</p>`;
+    footer = '';
   }
   const buttons =
     step >= 3

@@ -13,6 +13,8 @@ export const STORE_VERSION = 1;
  * @property {boolean} redDora 赤ドラあり
  * @property {boolean} sound 効果音
  * @property {boolean} onboardingDone 初回の使い方表示を見終えたか
+ * @property {boolean} beginner 初心者モード（次の対局から）
+ * @property {boolean} tileNames 初心者モードで手牌の下に牌の名前を出す
  */
 
 /**
@@ -37,6 +39,7 @@ export const STORE_VERSION = 1;
  * @property {Settings} settings
  * @property {Stats} stats
  * @property {Suspended | null} suspended
+ * @property {string[]} lessonsDone 終えたはじめてレッスンの id
  */
 
 /** @typedef {Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>} StorageLike */
@@ -45,9 +48,10 @@ export const STORE_VERSION = 1;
 export function defaultStore() {
   return {
     version: STORE_VERSION,
-    settings: { redDora: true, sound: false, onboardingDone: false },
+    settings: { redDora: true, sound: false, onboardingDone: false, beginner: false, tileNames: true },
     stats: { games: 0, ranks: [0, 0, 0, 0], rounds: 0, wins: 0, dealIns: 0 },
     suspended: null,
+    lessonsDone: [],
   };
 }
 
@@ -97,6 +101,8 @@ export function migrate(raw) {
       redDora: flag(settings.redDora, base.settings.redDora),
       sound: flag(settings.sound, base.settings.sound),
       onboardingDone: flag(settings.onboardingDone, base.settings.onboardingDone),
+      beginner: flag(settings.beginner, base.settings.beginner),
+      tileNames: flag(settings.tileNames, base.settings.tileNames),
     },
     stats: {
       games: count(stats.games, 0),
@@ -106,6 +112,10 @@ export function migrate(raw) {
       dealIns: count(stats.dealIns, 0),
     },
     suspended,
+    // 版1の途中で足した項目。古いデータにはないので空にする
+    lessonsDone: Array.isArray(raw.lessonsDone)
+      ? [...new Set(raw.lessonsDone.filter((id) => typeof id === 'string'))]
+      : [],
   };
 }
 

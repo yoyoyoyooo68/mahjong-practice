@@ -1,7 +1,7 @@
 // Service Worker: cache-first。配信するファイルをすべて先読みして、オフラインでも対局できるようにする。
 // ファイルを追加・変更して公開するときは CACHE_NAME の版数を上げる（test/pwa.test.js が一覧の漏れを検査する）。
 
-const CACHE_NAME = 'mahjong-practice-v1';
+const CACHE_NAME = 'mahjong-practice-v2';
 
 const ASSETS = [
   './',
@@ -31,12 +31,14 @@ const ASSETS = [
   'src/storage/store.js',
   'src/ui/hint-panel.js',
   'src/ui/home.js',
+  'src/ui/lessons.js',
   'src/ui/onboarding.js',
   'src/ui/result.js',
   'src/ui/session.js',
   'src/ui/sound.js',
   'src/ui/table.js',
   'src/ui/tile-svg.js',
+  'src/ui/tile-text.js',
   'src/ui/tiles-preview.js',
   'src/ui/yaku-explainer.js',
   'src/ui/yaku-list.js',

@@ -13,6 +13,7 @@
  * @property {boolean} callSpeculative 役牌の対子があるだけでも先に鳴いて進めるか
  * @property {number} callMaxShanten このシャンテン数以下になる鳴きだけする（遠い手では鳴かない）
  * @property {boolean} kan 暗槓・加槓をするか
+ * @property {number} [mistakeRate] わざと少し悪い牌を切る割合（0〜100）。初心者モードの相手だけが使う
  */
 
 /** @type {Readonly<Personality>} */
@@ -74,6 +75,37 @@ export const MENZEN = Object.freeze({
   callMaxShanten: 0,
   kan: true,
 });
+
+/**
+ * 初心者モードの相手。鳴かず、テンパイしたら必ずリーチする（黙ったままのテンパイがないので、危険がリーチで見える）。
+ * リーチを受けたらテンパイ以外は降りる。テンパイしていないときは7割の手番で少し悪い牌を切る（ドラ・赤五は切らない）。
+ * CPU同士の自動対局で、和了率は普通の相手の約20%に対して約10%。CPU同士の自動対局では、和了率が普通の相手の約20%から約8%に下がる。
+ * @param {string} id
+ * @param {string} name
+ * @returns {Readonly<Personality>}
+ */
+const gentle = (id, name) =>
+  Object.freeze({
+    id,
+    name,
+    style: 'やさしい',
+    desc: '鳴かず、テンパイしたら必ずリーチ。リーチを受けるとすぐ降りる。ときどき牌の選び方をまちがえる。',
+    foldShanten: 1,
+    riichiMinWaits: 1,
+    callYakuhai: false,
+    callTanyao: false,
+    callSpeculative: false,
+    callMaxShanten: -1,
+    kan: false,
+    mistakeRate: 70,
+  });
+
+/** 初心者モードの3人（席1〜3の順） @type {readonly Readonly<Personality>[]} */
+export const GENTLE = Object.freeze([
+  gentle('gentle-1', 'ハル'),
+  gentle('gentle-2', 'ナツ'),
+  gentle('gentle-3', 'アキ'),
+]);
 
 /** @type {readonly Readonly<Personality>[]} */
 export const PERSONALITIES = Object.freeze([BALANCE, ATTACK, DEFENSE, MENZEN]);

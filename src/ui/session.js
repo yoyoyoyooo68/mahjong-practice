@@ -2,7 +2,7 @@
 // 自分は席0。CPUは少し間をおいて打つ。鳴き・リーチの直後3秒は取り消せる。
 
 import { decide } from '../cpu/base.js';
-import { PERSONALITIES } from '../cpu/personalities/index.js';
+import { GENTLE, PERSONALITIES } from '../cpu/personalities/index.js';
 import { appendAction, createRecord, replay } from '../game/log.js';
 import { createGame, next, viewFor } from '../game/round.js';
 import { nextActor } from '../game/runner.js';
@@ -23,7 +23,11 @@ export const UNDO_MS = 3000;
 export function cpusFor(config) {
   const seed = config.seed ?? 1;
   return [null, 1, 2, 3].map((seat) =>
-    seat === null ? null : PERSONALITIES[(seed + seat) % PERSONALITIES.length],
+    seat === null
+      ? null
+      : config.beginner
+        ? GENTLE[seat - 1]
+        : PERSONALITIES[(seed + seat) % PERSONALITIES.length],
   );
 }
 
@@ -34,7 +38,7 @@ export function cpusFor(config) {
  * @property {(data: Suspended | null) => void} [onSave] 中断データの保存（null は破棄）
  * @property {(round: { won: boolean, dealtIn: boolean }) => void} [onRoundEnd]
  * @property {(rank: number) => void} [onGameEnd] 自分の順位 (0=1位)
- * @property {{ cpuTurn: number, cpuResponse: number, auto: number }} [delays] 待ち時間(ms)
+ * @property {{ cpuTurn: number, cpuResponse: number, auto: number }} [delays] 待ち時間(ms)。初心者モードの対局では2倍にする
  */
 
 /**
@@ -57,6 +61,8 @@ export function createSession(hooks) {
     /** @type {(import('../cpu/personalities/index.js').Personality | null)[]} */
     cpus: [null, null, null, null],
     names: ['あなた', '', '', ''],
+    /** 初心者モードの対局か（対局の設定 config.beginner。途中では変わらない） */
+    beginner: false,
     /** 画面側の一時的な状態 */
     ui: {
       /** @type {number | null} 選択中（持ち上げている）牌 */
@@ -101,6 +107,9 @@ export function createSession(hooks) {
       session.record = data.record;
       setup(data.record.config);
       resetUi(data.hintUses, data.hintTotal);
+      // 結果画面で中断していたら、局が終わったときと同じ見せ方に戻す（流局と初心者モードは最初から全部）
+      const r = session.state.phase === 'roundEnd' ? session.state.result : null;
+      if (r && (r.type !== 'win' || session.beginner)) session.ui.resultStep = 3;
       hooks.onChange();
       schedule();
       return true;
@@ -197,11 +206,14 @@ export function createSession(hooks) {
   function setup(config) {
     session.cpus = cpusFor(config);
     session.names = session.cpus.map((cpu) => (cpu ? cpu.name : 'あなた'));
+    session.beginner = Boolean(config.beginner);
   }
 
   /** @param {number} hintUses @param {number} hintTotal */
   function resetUi(hintUses, hintTotal) {
     Object.assign(session.ui, {
+      // 初心者モードはヒントを最初からオンにする（ボタンで消せる）
+      hintOn: session.beginner,
       selected: null,
       riichiMode: false,
       hintUses,
@@ -249,7 +261,8 @@ export function createSession(hooks) {
     }
     if (state.phase === 'roundEnd' && before.phase !== 'roundEnd' && state.result) {
       // 流局は段階開示するものがないので最初から全部見せる
-      session.ui.resultStep = state.result.type === 'win' ? 0 : 3;
+      // 初心者モードは一言のまとめを出し、内訳は「詳しく見る」に全部入れる
+      session.ui.resultStep = state.result.type === 'win' && !session.beginner ? 0 : 3;
       hooks.onRoundEnd?.({
         won: state.result.wins.some((w) => w.seat === ME),
         dealtIn: state.result.wins.some((w) => w.from === ME),
@@ -280,13 +293,14 @@ export function createSession(hooks) {
       return;
     }
     const who = session.cpus[seat] ?? PERSONALITIES[0];
+    const slow = session.beginner ? 2 : 1;
     timer = setTimeout(
       () => {
         apply(decide(viewFor(state, seat), who));
         hooks.onChange();
         schedule();
       },
-      state.phase === 'turn' ? delays.cpuTurn : delays.cpuResponse,
+      (state.phase === 'turn' ? delays.cpuTurn : delays.cpuResponse) * slow,
     );
   }
 

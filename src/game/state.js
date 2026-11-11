@@ -93,6 +93,7 @@ import { createWall, deal } from '../core/wall.js';
  * @property {Partial<Rules>} [rules]
  * @property {number} [startDealer] 起家の席
  * @property {number[]} [wall] 最初の局だけ使う牌山（テスト用）
+ * @property {boolean} [beginner] 初心者モードの対局か（状態機械は見ない。画面とCPUの顔ぶれが変わる）
  */
 
 /**

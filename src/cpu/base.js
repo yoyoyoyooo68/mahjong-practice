@@ -4,7 +4,7 @@
 
 import { evaluateDiscards } from '../core/efficiency.js';
 import { shanten } from '../core/shanten.js';
-import { doraKindOf, isHonor, isYaochu, kindOf, toCounts } from '../core/tiles.js';
+import { doraKindOf, isHonor, isRed, isYaochu, kindOf, toCounts } from '../core/tiles.js';
 import { BALANCE } from './personalities/index.js';
 
 /** @typedef {import('../game/round.js').PlayerView} PlayerView */
@@ -203,6 +203,21 @@ function decideTurn(view, who, threats) {
     return best;
   }
 
+  // 初心者モードの相手: テンパイしていないとき、ときどきわざと2〜4番目に良い牌を切る。
+  // テンパイを崩したり、ドラ・赤五を切ったりはしない（捨て牌が不自然になるため）。
+  // 乱数でなく局面から決めるので、同じ局面なら同じ手になる。
+  const rate = who.mistakeRate ?? 0;
+  if (rate > 0 && current >= 1) {
+    const h = mixHash(view);
+    const candidates = ranked
+      .slice(1, 4)
+      .filter((r) => !doraKinds.includes(r.kind) && !(view.rules.redDora && isRed(r.tile)));
+    if (h % 100 < rate && candidates.length > 0) {
+      const discard = legalOf(candidates[Math.floor(h / 100) % candidates.length].kind);
+      if (discard) return discard;
+    }
+  }
+
   for (const r of ranked) {
     const discard = legalOf(r.kind);
     if (!discard) continue; // 食い替えで切れない牌
@@ -213,6 +228,20 @@ function decideTurn(view, who, threats) {
     return discard;
   }
   return discards[0];
+}
+
+/**
+ * 局面から決まる 0 以上の整数（ミスの有無と選び方に使う）。
+ * @param {PlayerView} view
+ * @returns {number}
+ */
+function mixHash(view) {
+  let h = 2166136261 ^ view.seat;
+  const discards = view.players.reduce((n, p) => n + p.discards.length, 0);
+  for (const n of [...view.hand, discards, view.seat * 31]) {
+    h = Math.imul(h ^ n, 16777619) >>> 0;
+  }
+  return h;
 }
 
 /**

@@ -1,6 +1,6 @@
 // ホーム画面と、設定・中断確認などのシートの中身。
 
-import { PERSONALITIES } from '../cpu/personalities/index.js';
+import { GENTLE, PERSONALITIES } from '../cpu/personalities/index.js';
 import { exportStore, statsSummary } from '../storage/store.js';
 
 /** @typedef {import('../storage/store.js').Store} Store */
@@ -21,13 +21,15 @@ export function homeHtml(store, flags) {
   const update = flags.updateReady
     ? '<p class="notice">新しい版があります。<button type="button" data-cmd="update" class="chip is-on">更新する</button></p>'
     : '';
-  const cpus = PERSONALITIES.map((p) => `<li><strong>${p.name}</strong>（${p.style}）${p.desc}</li>`).join(
-    '',
-  );
+  const cpus = (store.settings.beginner ? GENTLE : PERSONALITIES)
+    .map((p) => `<li><strong>${p.name}</strong>（${p.style}）${p.desc}</li>`)
+    .join('');
   return (
-    `<main class="home"><h1>麻雀練習</h1><p class="lead">CPUと東風戦を打って、牌効率と役を練習します。</p>${notice}${update}` +
+    `<main class="home"><h1>麻雀練習</h1><p class="lead">CPU 3人と短い対局（4局・東風戦）を遊んで、麻雀を練習します。麻雀がはじめてなら「はじめてレッスン」から。</p>${notice}${update}` +
     `<div class="home-buttons">${resume}` +
-    `<button type="button" data-cmd="new-game" class="act${store.suspended ? '' : ' is-primary'}">${store.suspended ? '新しく始める' : '対局開始'}</button>` +
+    `<button type="button" data-cmd="lessons" class="act${store.lessonsDone.length === 0 && !store.suspended ? ' is-primary' : ' is-quiet'}">はじめてレッスン</button>` +
+    `<button type="button" data-cmd="new-game" class="act${store.suspended || store.lessonsDone.length === 0 ? '' : ' is-primary'}">${store.suspended ? '新しく始める' : '対局開始'}</button>` +
+    `<button type="button" data-cmd="toggle" data-id="beginner" class="act is-quiet" role="switch" aria-checked="${store.settings.beginner}">初心者モード: ${store.settings.beginner ? 'オン' : 'オフ'}</button>` +
     `<button type="button" data-cmd="sheet" data-id="yaku" class="act is-quiet">役一覧</button>` +
     `<button type="button" data-cmd="sheet" data-id="settings" class="act is-quiet">設定</button></div>` +
     `<section class="home-card"><h2>成績</h2><dl class="stats">` +
@@ -35,7 +37,7 @@ export function homeHtml(store, flags) {
     `<div><dt>着順</dt><dd>${store.stats.ranks.join('-')}</dd></div><div><dt>和了率</dt><dd>${s.winRate}</dd></div>` +
     `<div><dt>放銃率</dt><dd>${s.dealInRate}</dd></div></dl></section>` +
     `<section class="home-card"><h2>対戦相手</h2><ul class="cpu-list">${cpus}</ul>` +
-    `<p class="small">4人のうち3人が、対局ごとに入れ替わって相手になります。</p></section></main>`
+    `<p class="small">${store.settings.beginner ? '初心者モードでは、やさしい3人（ハル・ナツ・アキ）が相手です。' : '4人のうち3人が、対局ごとに入れ替わって相手になります。'}</p></section></main>`
   );
 }
 
@@ -56,6 +58,18 @@ export function settingsHtml(store, inGame) {
       '赤ドラ',
       store.settings.redDora,
       `5萬・5筒・5索に1枚ずつ。${inGame ? '次の対局から反映されます。' : ''}`,
+    ) +
+    toggle(
+      'beginner',
+      '初心者モード',
+      store.settings.beginner,
+      `やさしい言葉の案内とヒント、弱めでゆっくりの相手。${inGame ? '次の対局から反映されます。' : ''}`,
+    ) +
+    toggle(
+      'tileNames',
+      '牌の名前',
+      store.settings.tileNames,
+      '初心者モードのとき、手牌の下に「3マン」などの名前を出します。',
     ) +
     toggle('sound', '効果音', store.settings.sound, '打牌や和了のときに短い音を鳴らします。') +
     '<div class="setting"><div><strong>使い方</strong><p class="small">最初に出る3枚の説明をもう一度見ます。</p></div>' +

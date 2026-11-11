@@ -58,8 +58,10 @@ test('ヒント: 推奨の打牌・理由・牌ごとの受け入れ枚数', () 
   assert.ok(hint);
   assert.equal(hint.best, state.players[ME].drawn, 'ツモった中を切るのが最善');
   assert.equal(hint.shanten, 0);
-  assert.match(hint.reason, /中を切るとテンパイ/);
-  assert.match(hint.reason, /二索（残り4枚）/);
+  const plain = hint.reason.replace(/\{[^}]*\}/g, '');
+  assert.match(plain, /中を切るとテンパイ/);
+  assert.match(hint.reason, /中\{7z\}を切る/, '牌の絵の表記が付く');
+  assert.match(plain, /二索（残り4枚）/);
   assert.equal(
     hint.badges[/** @type {number} */ (hint.best)],
     11,

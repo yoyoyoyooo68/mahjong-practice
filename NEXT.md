@@ -9,7 +9,7 @@
 - 公開内容を変えたら `sw.js` の `CACHE_NAME` の版数を上げる（上げないと、一度開いた端末には古い版が出続ける）。
 
 ## いまの状態
-- `npm run check`（型検査・Lint・テスト152件）が通る。Biome の警告3件は CSS の詳細度の指摘で、動作には影響しない。
+- `npm run check`（型検査・Lint・テスト180件）が通る。Biome の警告3件は CSS の詳細度の指摘で、動作には影響しない。
 - 画面: `npm run serve` → `http://localhost:5180/`（`?seed=数字` で牌山を固定、`?sw=1` で Service Worker も登録）。
 - `tiles.html` は牌の絵柄の確認用（開発用ページ）。
 - `npm run sim -- 200` でCPU同士の自動対局の集計。
@@ -20,6 +20,13 @@
 - `src/ui/table.js` / `result.js` / `hint-panel.js` / `yaku-list.js` / `yaku-explainer.js` / `home.js` / `onboarding.js` / `sound.js` … どれも HTML 文字列を返すだけ。
 - `src/storage/store.js` … localStorage（version付き、壊れていたら初期化）。
 - `sw.js` の `ASSETS` は手書きの一覧。**ファイルを足したら一覧と `CACHE_NAME` の版数を更新する**（`test/pwa.test.js` が漏れを検出する）。
+
+## 初心者向け（2026-11-11 追加、DESIGN.md 5.13）
+- **はじめてレッスン**: 実装済み（`src/ui/lessons.js`、ホームの「はじめてレッスン」から）。ブラウザの 844×390 で確認済み。まだ公開（push）していない。
+- **説明文の牌の絵**: 実装済み（`src/ui/tile-text.js` の `richText`。文中の `{3p}` が牌の絵になる）。ヒントの文にも付けた。
+- **初心者モード**: 実装済み（DESIGN.md 5.13）。ホームの「初心者モード」で切り替え、次の対局から反映。ヒントはボタンで出し入れでき、初心者モードでは最初からオン。ブラウザの 844×390 で卓・流局の結果画面を確認済み。和了の結果画面と鳴きの「おすすめ: パス」はテストだけで、画面では見ていない。
+- 初心者役・プロ役のレビューを反映済み（DESIGN.md 改訂5）。
+- レッスン・初心者モードとも、まだ公開（push）していない。公開時の `CACHE_NAME` は `mahjong-practice-v2`（前回の公開は v1）。
 
 ## 未対応・未確認
 - **実機確認をしていない**（iPhone 横持ちのタップしやすさ、ホーム画面追加、オフライン起動、効果音）。ブラウザの 844×390 表示では確認済み。

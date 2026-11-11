@@ -73,7 +73,13 @@ test('一部が欠けたり型が違っていても、読める部分は残し�
     suspended: { record: { version: 1, config: {}, actions: 'x' } },
   });
   assert.ok(store);
-  assert.deepEqual(store.settings, { redDora: false, sound: false, onboardingDone: false });
+  assert.deepEqual(store.settings, {
+    redDora: false,
+    sound: false,
+    onboardingDone: false,
+    beginner: false,
+    tileNames: true,
+  });
   assert.deepEqual(store.stats, { games: 3, ranks: [0, 0, 0, 0], rounds: 0, wins: 0, dealIns: 0 });
   assert.equal(store.suspended, null, '形のおかしい中断データは捨てる');
 });
