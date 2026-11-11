@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'" />
+    <meta name="theme-color" content="#153628" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="麻雀練習" />
+    <title>麻雀練習</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" href="icons/icon-192.png" />
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+    <link rel="stylesheet" href="styles/tokens.css" />
+    <link rel="stylesheet" href="styles/tiles.css" />
+    <link rel="stylesheet" href="styles/app.css" />
+    <script type="module" src="src/main.js"></script>
+  </head>
+  <body>
+    <p id="offline" class="offline-band" role="status" hidden>オフラインです（対局はそのまま続けられます）</p>
+    <div id="app"></div>
+    <div class="rotate-notice" role="alert">
+      <p>端末を横向きにしてください</p>
+      <p class="small">対局はそのまま保たれています。</p>
+    </div>
+    <noscript>このアプリを使うには JavaScript を有効にしてください。</noscript>
+  </body>
+</html>

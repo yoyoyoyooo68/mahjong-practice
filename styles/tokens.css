@@ -1,0 +1,65 @@
+/* デザイントークン（DESIGN.md 5.4）。卓はOSのライト/ダークにかかわらずダークグリーン固定。 */
+:root {
+  --felt: #1f4d3a;
+  --felt-dark: #153628;
+  --tile: #f5ebd0;
+  --tile-edge: #c9b98f;
+  --ink: #1a1a1a;
+  --accent-red: #d6453d;
+  --accent-hint: #f2b84b;
+  --ok: #4caf7a;
+  --text: #f2f2f2;
+  --text-dim: #c3d2ca;
+
+  /* 牌の絵柄用（クリーム地で読める濃さ） */
+  --tile-red: #c2352e;
+  --tile-green: #1e7a46;
+  --tile-blue: #1f4e8c;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --radius-tile: 4px;
+  --radius-panel: 12px;
+
+  --dur-fast: 120ms;
+  --dur-mid: 200ms;
+  --dur-slow: 320ms;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  --font-ui: system-ui, "Hiragino Sans", "Noto Sans JP", sans-serif;
+  --font-tile: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--felt);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  line-height: 1.6;
+  font-variant-numeric: tabular-nums;
+  touch-action: manipulation;
+}
+
+a {
+  color: var(--accent-hint);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent-hint);
+  outline-offset: 2px;
+}

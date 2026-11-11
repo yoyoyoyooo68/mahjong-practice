@@ -1,0 +1,48 @@
+/* 牌のSVG（src/ui/tile-svg.js）の色付け */
+.tile {
+  display: block;
+  flex: none;
+  filter: drop-shadow(0 1px 0 rgb(0 0 0 / 0.35));
+}
+
+.tile-face {
+  fill: var(--tile);
+  stroke: var(--tile-edge);
+  stroke-width: 1;
+}
+
+.tile-text {
+  font-family: var(--font-tile);
+  font-weight: 700;
+}
+
+.tile-ink {
+  fill: var(--ink);
+}
+
+.tile-red,
+.tile-star {
+  fill: var(--tile-red);
+}
+
+.tile-green {
+  fill: var(--tile-green);
+}
+
+.tile-blue {
+  fill: var(--tile-blue);
+}
+
+.tile-hole {
+  fill: var(--tile);
+}
+
+.tile-haku {
+  fill: none;
+  stroke: var(--tile-blue);
+  stroke-width: 1.5;
+}
+
+.tile-back {
+  fill: #b9853a;
+}

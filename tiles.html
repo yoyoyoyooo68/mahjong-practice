@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'" />
+    <title>牌の確認 | 麻雀練習</title>
+    <link rel="stylesheet" href="styles/tokens.css" />
+    <link rel="stylesheet" href="styles/tiles.css" />
+    <link rel="stylesheet" href="styles/preview.css" />
+    <script type="module" src="src/ui/tiles-preview.js"></script>
+  </head>
+  <body>
+    <main class="page">
+      <header class="page-head">
+        <h1>牌の確認</h1>
+        <a href="./">ホームへ</a>
+      </header>
+
+      <section class="panel" aria-labelledby="h-deal">
+        <h2 id="h-deal">配牌とヒントの試し打ち</h2>
+        <form id="deal-form" class="deal-form">
+          <label for="seed">シード</label>
+          <input id="seed" name="seed" type="number" inputmode="numeric" min="0" step="1" value="1" />
+          <button type="submit">配る</button>
+          <button type="button" id="next-seed">次のシード</button>
+        </form>
+        <p class="meta" id="deal-meta"></p>
+        <div class="hand" id="hand"></div>
+        <p class="advice" id="advice" aria-live="polite"></p>
+        <div class="ukeire" id="ukeire"></div>
+        <p class="note">牌の下の数字は、その牌を切ったときの受け入れ枚数です。▲と太枠が推奨の打牌です。</p>
+      </section>
+
+      <section class="panel" aria-labelledby="h-all">
+        <h2 id="h-all">全種類（手牌サイズ 40×56）</h2>
+        <div id="all-tiles"></div>
+      </section>
+
+      <section class="panel" aria-labelledby="h-sizes">
+        <h2 id="h-sizes">サイズ別</h2>
+        <div id="sizes"></div>
+      </section>
+    </main>
+  </body>
+</html>
