@@ -11,8 +11,8 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -23,6 +23,7 @@ jobs:
 
   # 検査が通った main への push だけを GitHub Pages に公開する。
   # 事前にリポジトリの Settings → Pages → Source を「GitHub Actions」にしておくこと。
+  # 失敗したときは「Re-run failed jobs」ではなく全体を再実行する（成果物が二重になって公開に失敗するため）。
   deploy:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: check
@@ -37,13 +38,13 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: 配信するファイルだけを集める
         run: |
           mkdir _site
           cp -r index.html tiles.html manifest.webmanifest sw.js icons src styles _site/
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: _site
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
